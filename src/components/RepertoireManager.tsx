@@ -1,27 +1,23 @@
 import React from 'react';
-import { Repertoire , Move } from '@/utils/Repertoire';
+import { Repertoire, Move } from '@/utils/Repertoire';
 import { Chess } from 'chess.js';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import MoveSection from './MoveSection';
 
 const CreateNewRepertoire = () => {
-  useEffect(() => {
-    // Create a new chess board
-    const chess = new Chess();
+  const initialRepertoire = new Repertoire("hfad");
 
-    // Make some moves
-    chess.move('e4');
-    chess.move('e5');
-    chess.move('Nf3');
-    chess.move('Nc6');
-    chess.move('Bb5');
+  const [moveSection, setMoveSection] = useState(initialRepertoire);
 
-    // Print the current board position to the console
-    console.log(chess.ascii());
-  }, []);
+  const updateRepertoire = (newMove : string) => {
+    const updatedRepertoire = { ...moveSection }; // or use methods from Repertoire to update it properly
+    // updatedRepertoire.// Assuming `addMove` is a method in Repertoire
+    setMoveSection(updatedRepertoire);
+  };
 
   return (
     <>
-
+      <MoveSection moveSection={moveSection} setMoveSection={setMoveSection}/>
     </>
   );
 };

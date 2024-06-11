@@ -17,6 +17,7 @@
     "next": "^14.1.4",
     "next-auth": "^4.24.7",
     "react": "^18.3.1",
+    "react-chessboard": "^4.6.0",
     "react-dom": "^18.3.1",
     "require": "^0.4.4"
   },
