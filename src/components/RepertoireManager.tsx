@@ -1,25 +1,40 @@
 import React from 'react';
-import { Repertoire, Move } from '@/utils/Repertoire';
-import { Chess } from 'chess.js';
+import { Repertoire } from '@/utils/Repertoire';
+import { Chess, Move } from 'chess.js';
 import { useEffect, useState } from 'react';
 import MoveSection from './MoveSection';
+import ChessBoard from "@/components/ChessBoard";
+import _ from "lodash";
 
-const CreateNewRepertoire = () => {
-  const initialRepertoire = new Repertoire("hfad");
+function CreateNewRepertoire() {
+  const initialRepertoire = new Repertoire;
 
   const [moveSection, setMoveSection] = useState(initialRepertoire);
 
-  const updateRepertoire = (newMove : string) => {
-    const updatedRepertoire = { ...moveSection }; // or use methods from Repertoire to update it properly
-    // updatedRepertoire.// Assuming `addMove` is a method in Repertoire
-    setMoveSection(updatedRepertoire);
+  const [game, setGame] = useState(moveSection.currentGame());
+
+  const handlePieceDrop = (move : Move) => {
+    console.log(move.san);
+      const updatedMoveSection = _.cloneDeep(moveSection); // Create a new instance
+      updatedMoveSection.addMove(move.san);
+      setMoveSection(updatedMoveSection); // Update state with new instance
   };
+
+  useEffect(() => {
+    setGame(moveSection.currentGame());
+  }, [moveSection]);
 
   return (
     <>
-      <MoveSection moveSection={moveSection} setMoveSection={setMoveSection}/>
+      <ChessBoard game={game} setGame={setGame} onPieceDrop={handlePieceDrop} />
+      <MoveSection moveSection={moveSection} setMoveSection={setMoveSection} />
+      <button onClick={() => {
+              const updatedMoveSection = _.cloneDeep(moveSection); // Create a new instance
+              updatedMoveSection.previousMove();
+              setMoveSection(updatedMoveSection); // Update state with new instance
+      }} >previous</button>
     </>
   );
-};
+}
 
 export default CreateNewRepertoire;

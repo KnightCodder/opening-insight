@@ -1,53 +1,153 @@
+import { Chess } from "chess.js";
+
 class Move {
     move: string;
     moveNumber: number;
-    turn: string;
+    turn: number;
     priority: number;
     next: Move[];
 
-    constructor(move: string, moveNumber: number, turn: string, priority: number)
-    {
+    constructor(move: string = "", moveNumber: number = 0, turn: number = -1, priority: number = 0) {
         this.move = move;
         this.moveNumber = moveNumber;
         this.turn = turn;
         this.priority = priority;
         this.next = [];
     }
-
-    addMove(move: string, moveNumber: number, turn: string, priority: number): void
-    {
-        const newMove = new Move(move, moveNumber, turn, priority);
-        this.next.push(newMove);
-    }
-
-    // Helper method to convert the move and its subsequent moves to a string
-    toString(indentLevel: number = 0): string {
-        let indent = ' '.repeat(indentLevel * 2);
-        let result = `${indent}Move: ${this.move}, Move Number: ${this.moveNumber}, Turn: ${this.turn}, Priority: ${this.priority}\n`;
-        for (const nextMove of this.next) {
-            result += nextMove.toString(indentLevel + 1);
-        }
-        return result;
-    }
 }
 
 class Repertoire {
-    startingPosition: string;
-    firstMoves: Move[];
+    startingFen: string = "default pgn";
+    moves: Move = new Move();
+    iterator: number[] = [];
 
-    constructor(startingPosition: string)
+    constructor(startingFen: string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     {
-        this.startingPosition = startingPosition;
-        this.firstMoves = [];
+        this.startingFen = startingFen;
     }
 
-    // Method to convert the repertoire to a string
-    public toString(): string {
-        let result = `Starting Position: ${this.startingPosition}\n`;
-        for (const move of this.firstMoves) {
-            result += move.toString(1);
+    private toPgnHelper(pgn: string, currentMove: Move): string {
+        pgn += " " + currentMove.move;
+
+        if (currentMove.next.length === 0) {
+            pgn += ")";
+            return pgn;
         }
-        return result;
+
+        for (let i = 0; i < currentMove.next.length; i++) {
+            if (i !== 0) {
+                pgn += " (";
+            }
+
+            const nextMove = this.priorityMove(currentMove, i);
+            if (nextMove) {
+                pgn = this.toPgnHelper(pgn, nextMove);
+            }
+        }
+
+        return pgn;
+    }
+
+
+    private iteratingMove(): Move | null {
+        let it = this.moves;
+
+        for (const i of this.iterator) {
+            const nextMove = this.priorityMove(it, i);
+            if (!nextMove) {
+                console.log("invalid iterator");
+                return null;
+            }
+            it = nextMove;
+        }
+
+        return it;
+    }
+
+    private priorityMove(currentMove: Move, priority: number): Move | null {
+        for (const move of currentMove.next) {
+            if (move.priority === priority) {
+                return move;
+            }
+        }
+        return null;
+    }
+
+    currentGame(): Chess {
+        let game = new Chess(this.startingFen);
+
+        let it = this.moves;
+        for (const i of this.iterator) {
+            const nextMove = this.priorityMove(it, i);
+            if (!nextMove) {
+                console.log("invalid iterator");
+                break;
+            }
+            it = nextMove;
+            game.move(it.move);
+        }        
+
+        return game;
+    }
+
+    nextMove(line: number = 0): boolean {
+        const nextMove = this.priorityMove(this.iteratingMove()!, line);
+        if (!nextMove) return false;
+
+        this.iterator.push(line);
+        return true;
+    }
+
+    previousMove(): boolean {
+        if (this.iterator.length === 0) return false;
+
+        this.iterator.pop();
+        return true;
+    }
+
+    deleteMove(): void {
+        if (this.iterator.length === 0) return;
+
+        const priority = this.iteratingMove()!.priority;
+        this.previousMove();
+        const parentMove = this.iteratingMove();
+
+        if (parentMove) {
+            parentMove.next = parentMove.next.filter(move => move.priority !== priority);
+            for (const move of parentMove.next) {
+                if (move.priority > priority) {
+                    move.priority--;
+                }
+            }
+        }
+    }
+
+    addMove(move: string, priority: number = 0): void {
+        const currentMove = this.iteratingMove();
+
+        if (currentMove) {
+            for (const m of currentMove.next) {
+                if (m.priority >= priority) {
+                    m.priority++;
+                }
+            }
+
+            const currentTurn = -currentMove.turn;
+            let currentMoveNumber = currentMove.moveNumber;
+            if (currentTurn === 1) {
+                currentMoveNumber++;
+            }
+
+            currentMove.next.push(new Move(move, currentMoveNumber, currentTurn, priority));
+            this.iterator.push(priority);
+        }
+    }
+
+    toPgn(): string {
+        let pgn = this.startingFen + "\n\n";
+        const parentMove = this.moves;
+        pgn = this.toPgnHelper(pgn, parentMove);
+        return pgn;
     }
 }
 

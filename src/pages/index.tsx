@@ -2,7 +2,6 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import CreateNewRepertoire from "@/components/RepertoireManager";
 import Head from "next/head";
 import type { NextPage } from "next";
-import ChessBoard from "@/components/chessBoard";
 import styles from "@/styles/ChessBoard.module.css"
 
 export default function Home() {
@@ -41,8 +40,8 @@ export default function Home() {
 
             <main className={styles.main}>
               <h1>Welcome to Opening Insight</h1>
-              <ChessBoard />
             </main>
+              <CreateNewRepertoire />
           </div>
         </>
       )}

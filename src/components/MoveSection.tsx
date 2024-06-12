@@ -8,10 +8,10 @@ interface RepertoireComponentProps {
 
 const MoveSection : React.FC<RepertoireComponentProps> = ({ moveSection, setMoveSection}) => {
     
-    const [displayString, setDisplayString] = useState<string>(moveSection.toString()); 
+    const [displayString, setDisplayString] = useState<string>(moveSection.toPgn()); 
 
     useEffect(() => {
-        setDisplayString(moveSection.toString());
+        setDisplayString(moveSection.toPgn());
       }, [moveSection]);
 
     return (

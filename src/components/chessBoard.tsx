@@ -2,8 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess, Move } from 'chess.js';
 
-const ChessBoard: React.FC = () => {
-    const [game, setGame] = useState(new Chess());
+interface BoardComponentProps {
+    game: Chess;
+    setGame: React.Dispatch<React.SetStateAction<Chess>>;
+    onPieceDrop: (move: Move) => void;
+}
+
+const ChessBoard: React.FC<BoardComponentProps> = ({ game, setGame, onPieceDrop }) => {
 
     function safeGameMutate(modify: (game: Chess) => void): void {
         setGame((g) => {
@@ -13,50 +18,22 @@ const ChessBoard: React.FC = () => {
         });
     }
 
-    function onDrop(sourceSquare: string, targetSquare: string, piece: string): Move | null {
-        const gameCopy = new Chess(game.fen());
-        const move = gameCopy.move({
-            from: sourceSquare,
-            to: targetSquare,
-            promotion: piece[1]?.toLowerCase() ?? "q",
-        });
-        if (move) {
-            setGame(gameCopy);
+    function onDrop(sourceSquare: string, targetSquare: string, piece: string): boolean {
+        try {
+            const gameCopy = new Chess(game.fen());
+            const move = gameCopy.move({
+                from: sourceSquare,
+                to: targetSquare,
+                promotion: 'q', // Always promote to queen for simplicity
+            });
+
+            onPieceDrop(move);
+            return true;
         }
-        return move;
+        catch (error) {
+            return false;
+        }
     }
-
-    // const pieces = [
-    //     "wP",
-    //     "wN",
-    //     "wB",
-    //     "wR",
-    //     "wQ",
-    //     "wK",
-    //     "bP",
-    //     "bN",
-    //     "bB",
-    //     "bR",
-    //     "bQ",
-    //     "bK",
-    // ];
-
-    // const customPieces: any = useMemo(() => {
-    //     const pieceComponents: any = {};
-    //     pieces.forEach((piece) => {
-    //         pieceComponents[piece] = ({ squareWidth }: { squareWidth: number }) => (
-    //             <div
-    //                 style={{
-    //                     width: squareWidth,
-    //                     height: squareWidth,
-    //                     backgroundImage: `url(/${piece}.png)`,
-    //                     backgroundSize: "100%",
-    //                 }}
-    //             />
-    //         );
-    //     });
-    //     return pieceComponents;
-    // }, [pieces]);
 
     return (
         <div style={boardWrapper}>
@@ -71,7 +48,7 @@ const ChessBoard: React.FC = () => {
                 }}
                 customDarkSquareStyle={{ backgroundColor: "#779952" }}
                 customLightSquareStyle={{ backgroundColor: "#edeed1" }}
-                // customPieces={customPieces}
+            // customPieces={customPieces}
             />
             <button
                 style={buttonStyle}
