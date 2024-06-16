@@ -1,4 +1,5 @@
 import { Chess } from "chess.js";
+import { IMove, IRepertoire } from "@/models/repertoire";
 
 class Move {
     move: string;
@@ -6,25 +7,48 @@ class Move {
     turn: number;
     priority: number;
     next: Move[];
-
-    constructor(move: string = "", moveNumber: number = 0, turn: number = -1, priority: number = 0) {
-        this.move = move;
-        this.moveNumber = moveNumber;
-        this.turn = turn;
-        this.priority = priority;
-        this.next = [];
+  
+    constructor(move: string, moveNumber: number, turn: number, priority: number, next: Move[] = []) {
+      this.move = move;
+      this.moveNumber = moveNumber;
+      this.turn = turn;
+      this.priority = priority;
+      this.next = next;
     }
-}
+  
+    static fromIMove(imove: IMove): Move {
+      return new Move(
+        imove.move,
+        imove.moveNumber,
+        imove.turn,
+        imove.priority,
+        imove.next.map(Move.fromIMove)
+      );
+    }
+  }
 
 class Repertoire {
     startingFen: string = "default pgn";
-    moves: Move = new Move();
+    moves: Move = new Move("",0,-1,0);
     iterator: number[] = [];
 
-    constructor(startingFen: string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    {
+    constructor(startingFen: string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves : Move | null = null ) {
         this.startingFen = startingFen;
+
+        if (moves)
+        {
+            this.moves = moves;
+        }
     }
+
+    static fromIRepertoire(irepertoire: IRepertoire): Repertoire {
+        return new Repertoire(
+        
+          irepertoire.startingFen,
+          Move.fromIMove(irepertoire.moves[0])
+        );
+      }
+    
 
     private toPgnHelper(pgn: string, currentMove: Move): string {
         pgn += " " + currentMove.move;
@@ -37,17 +61,20 @@ class Repertoire {
         for (let i = 0; i < currentMove.next.length; i++) {
             if (i !== 0) {
                 pgn += " (";
-            }
 
-            const nextMove = this.priorityMove(currentMove, i);
-            if (nextMove) {
-                pgn = this.toPgnHelper(pgn, nextMove);
+                const nextMove = this.priorityMove(currentMove, i);
+                if (nextMove) {
+                    pgn = this.toPgnHelper(pgn, nextMove);
+                }
             }
+        }
+        const nextMove = this.priorityMove(currentMove, 0);
+        if (nextMove) {
+            pgn = this.toPgnHelper(pgn, nextMove);
         }
 
         return pgn;
     }
-
 
     private iteratingMove(): Move | null {
         let it = this.moves;
@@ -85,7 +112,7 @@ class Repertoire {
             }
             it = nextMove;
             game.move(it.move);
-        }        
+        }
 
         return game;
     }
@@ -122,14 +149,26 @@ class Repertoire {
         }
     }
 
-    addMove(move: string, priority: number = 0): void {
+    addMove(move: string, priority: number | null): void {
         const currentMove = this.iteratingMove();
 
         if (currentMove) {
             for (const m of currentMove.next) {
-                if (m.priority >= priority) {
-                    m.priority++;
+                if (m.move == move) {
+                    this.iterator.push(m.priority);
+                    return;
                 }
+            }
+
+            if (priority) {
+                for (const m of currentMove.next) {
+                    if (m.priority >= priority) {
+                        m.priority++;
+                    }
+                }
+            }
+            else {
+                priority = currentMove.next.length;
             }
 
             const currentTurn = -currentMove.turn;
@@ -152,3 +191,4 @@ class Repertoire {
 }
 
 export { Repertoire, Move };
+

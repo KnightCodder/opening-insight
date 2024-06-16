@@ -24,8 +24,8 @@ export default NextAuth({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
     }),
-  ],
-  adapter: PrismaAdapter(prisma),
+  ]
+  ,adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, token, user }) {
@@ -34,3 +34,4 @@ export default NextAuth({
     },
   },
 });
+

@@ -50,26 +50,6 @@ const ChessBoard: React.FC<BoardComponentProps> = ({ game, setGame, onPieceDrop 
                 customLightSquareStyle={{ backgroundColor: "#edeed1" }}
             // customPieces={customPieces}
             />
-            <button
-                style={buttonStyle}
-                onClick={() => {
-                    safeGameMutate((game) => {
-                        game.reset();
-                    });
-                }}
-            >
-                reset
-            </button>
-            <button
-                style={buttonStyle}
-                onClick={() => {
-                    safeGameMutate((game) => {
-                        game.undo();
-                    });
-                }}
-            >
-                undo
-            </button>
         </div>
     );
 };
